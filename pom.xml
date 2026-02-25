@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.salao</groupId>
-	<artifactId>salao-agendamentos</artifactId>
+	<artifactId>beauty-hub</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>salao-agendamentos</name>
+	<name>beauty-hub</name>
 	<description>PI Salão Agendamentos</description>
 	<url/>
 	<licenses>
