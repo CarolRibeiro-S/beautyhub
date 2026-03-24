@@ -1,3 +1,7 @@
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Spring Boot](https://img.shields.io/badge/SpringBoot-3.x-green)
+![MySQL](https://img.shields.io/badge/MySQL-Database-orange)
+
 📌 BeautyHub
 
 Sistema de agendamento para salões de beleza, desenvolvido como projeto de Engenharia de Software.
