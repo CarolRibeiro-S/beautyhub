@@ -1,11 +1,14 @@
 package com.beautyhub.service;
 
+import com.beautyhub.dto.LoginResponse;
+import com.beautyhub.dto.LoginResponse;
 import com.beautyhub.entity.User;
 import com.beautyhub.exception.AuthenticationException;
 import com.beautyhub.repository.UserRepository;
 import com.beautyhub.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 @Service
 public class AuthService {
@@ -22,15 +25,16 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    public String login(String email, String rawPassword) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthenticationException("Usuário não encontrado"));
+    public LoginResponse login(String email, String rawPassword) {
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new AuthenticationException("Usuário não encontrado"));
 
-        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-            throw new AuthenticationException("Senha inválida");
-        }
+    if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+        throw new AuthenticationException("Senha inválida");
+    }
 
-        return jwtService.generateToken(user.getEmail(), "USER");
+    String token = jwtService.generateToken(user.getEmail(), "USER");
+    return new LoginResponse(token, user.getFullName());
     }
 
     public void register(String fullName, String email, String phone, String rawPassword) {
