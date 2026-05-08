@@ -19,5 +19,5 @@ public class AppointmentResponse {
     public String getStatus() { return status; }
     public String getDataHoraInicio() { return dataHoraInicio; }
     public String getServicoNome() { return servicoNome; }
-    public Double getServicoPre() { return servicoPreco; }
+    public Double getServicoPreco() { return servicoPreco; }
 }
