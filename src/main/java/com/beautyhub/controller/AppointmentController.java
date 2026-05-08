@@ -23,29 +23,39 @@ public class AppointmentController {
     }
 
     @PostMapping
-    public ResponseEntity<AppointmentResponse> createAppointment(@RequestBody AppointmentRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = auth.getName();
+    public ResponseEntity<?> createAppointment(@RequestBody AppointmentRequest request) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
 
-        Appointment appointment = appointmentService.createAppointment(
-                userEmail,
-                request.getServiceId(),
-                request.getDataHoraInicio()
-        );
-        return ResponseEntity.ok(toResponse(appointment));
+            Appointment appointment = appointmentService.createAppointment(
+                    userEmail,
+                    request.getServiceId(),
+                    request.getDataHoraInicio()
+            );
+            return ResponseEntity.ok(toResponse(appointment));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
+        }
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<AppointmentResponse>> getMyAppointments() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userEmail = auth.getName();
+    public ResponseEntity<?> getMyAppointments() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth.getName();
 
-        List<AppointmentResponse> appointments = appointmentService
-                .getAppointmentsByUser(userEmail)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(appointments);
+            List<AppointmentResponse> appointments = appointmentService
+                    .getAppointmentsByUser(userEmail)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(appointments);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
+        }
     }
 
     private AppointmentResponse toResponse(Appointment a) {
