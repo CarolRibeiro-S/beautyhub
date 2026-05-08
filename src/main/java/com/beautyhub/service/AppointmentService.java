@@ -26,24 +26,25 @@ public class AppointmentService {
         this.userRepository = userRepository;
     }
 
-    public Appointment createAppointment(String userEmail, Long serviceId, LocalDateTime dataHoraInicio) {
+    public Appointment createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         BeautyService service = beautyServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
 
-        // Verificar se há conflito de horário (simples, sem sobreposição)
+        LocalDateTime dataHora = LocalDateTime.parse(dataHoraInicioStr);
+
         List<Appointment> conflicting = appointmentRepository.findByServiceAndDataHoraInicioBetween(
                 service,
-                dataHoraInicio,
-                dataHoraInicio.plusMinutes(service.getDuracaoMinutos())
+                dataHora,
+                dataHora.plusMinutes(service.getDuracaoMinutos())
         );
         if (!conflicting.isEmpty()) {
             throw new RuntimeException("Horário indisponível");
         }
 
-        Appointment appointment = new Appointment(user, service, dataHoraInicio);
+        Appointment appointment = new Appointment(user, service, dataHora);
         return appointmentRepository.save(appointment);
     }
 
