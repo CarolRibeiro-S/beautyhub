@@ -1,19 +1,16 @@
 package com.beautyhub.controller;
 
-import java.util.List;
-
+import com.beautyhub.dto.AppointmentRequest;
+import com.beautyhub.dto.AppointmentResponse;
+import com.beautyhub.entity.Appointment;
+import com.beautyhub.service.AppointmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.beautyhub.dto.AppointmentRequest;
-import com.beautyhub.entity.Appointment;
-import com.beautyhub.service.AppointmentService;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/appointments")
@@ -26,7 +23,7 @@ public class AppointmentController {
     }
 
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentRequest request) {
+    public ResponseEntity<AppointmentResponse> createAppointment(@RequestBody AppointmentRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
 
@@ -35,15 +32,29 @@ public class AppointmentController {
                 request.getServiceId(),
                 request.getDataHoraInicio()
         );
-        return ResponseEntity.ok(appointment);
+        return ResponseEntity.ok(toResponse(appointment));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<Appointment>> getMyAppointments() {
+    public ResponseEntity<List<AppointmentResponse>> getMyAppointments() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
 
-        List<Appointment> appointments = appointmentService.getAppointmentsByUser(userEmail);
+        List<AppointmentResponse> appointments = appointmentService
+                .getAppointmentsByUser(userEmail)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(appointments);
+    }
+
+    private AppointmentResponse toResponse(Appointment a) {
+        return new AppointmentResponse(
+                a.getId(),
+                a.getStatus().name(),
+                a.getDataHoraInicio().toString(),
+                a.getService().getNome(),
+                a.getService().getPreco().doubleValue()
+        );
     }
 }
