@@ -4,6 +4,8 @@ import com.beautyhub.dto.AppointmentRequest;
 import com.beautyhub.dto.AppointmentResponse;
 import com.beautyhub.entity.Appointment;
 import com.beautyhub.service.AppointmentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/appointments")
 public class AppointmentController {
 
+    private static final Logger log = LoggerFactory.getLogger(AppointmentController.class);
+
     private final AppointmentService appointmentService;
 
     public AppointmentController(AppointmentService appointmentService) {
@@ -27,6 +31,8 @@ public class AppointmentController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth.getName();
+            log.info("Criando agendamento para: {}", userEmail);
+            log.info("ServiceId: {}, Data: {}", request.getServiceId(), request.getDataHoraInicio());
 
             Appointment appointment = appointmentService.createAppointment(
                     userEmail,
@@ -35,8 +41,8 @@ public class AppointmentController {
             );
             return ResponseEntity.ok(toResponse(appointment));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
+            log.error("Erro ao criar agendamento: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage() + " | Causa: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
         }
     }
 
@@ -45,7 +51,6 @@ public class AppointmentController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth.getName();
-
             List<AppointmentResponse> appointments = appointmentService
                     .getAppointmentsByUser(userEmail)
                     .stream()
@@ -53,7 +58,7 @@ public class AppointmentController {
                     .collect(Collectors.toList());
             return ResponseEntity.ok(appointments);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erro ao buscar agendamentos: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
