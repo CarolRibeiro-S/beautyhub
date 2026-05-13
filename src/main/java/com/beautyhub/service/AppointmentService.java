@@ -6,6 +6,8 @@ import com.beautyhub.entity.User;
 import com.beautyhub.repository.AppointmentRepository;
 import com.beautyhub.repository.BeautyServiceRepository;
 import com.beautyhub.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Service
 public class AppointmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentRepository appointmentRepository;
     private final BeautyServiceRepository beautyServiceRepository;
@@ -27,25 +31,22 @@ public class AppointmentService {
     }
 
     public Appointment createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
+        log.info("Buscando usuario: {}", userEmail);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
+        log.info("Buscando servico: {}", serviceId);
         BeautyService service = beautyServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
 
+        log.info("Parseando data: {}", dataHoraInicioStr);
         LocalDateTime dataHora = LocalDateTime.parse(dataHoraInicioStr);
 
-        List<Appointment> conflicting = appointmentRepository.findByServiceAndDataHoraInicioBetween(
-                service,
-                dataHora,
-                dataHora.plusMinutes(service.getDuracaoMinutos())
-        );
-        if (!conflicting.isEmpty()) {
-            throw new RuntimeException("Horário indisponível");
-        }
-
+        log.info("Salvando agendamento...");
         Appointment appointment = new Appointment(user, service, dataHora);
-        return appointmentRepository.save(appointment);
+        Appointment saved = appointmentRepository.save(appointment);
+        log.info("Agendamento salvo com id: {}", saved.getId());
+        return saved;
     }
 
     public List<Appointment> getAppointmentsByUser(String userEmail) {
