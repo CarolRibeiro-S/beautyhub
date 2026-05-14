@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class AppointmentController {
 
     private static final Logger log = LoggerFactory.getLogger(AppointmentController.class);
-
     private final AppointmentService appointmentService;
 
     public AppointmentController(AppointmentService appointmentService) {
@@ -31,7 +30,6 @@ public class AppointmentController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth != null ? auth.getName() : null;
-            log.info("Usuario autenticado: {}", userEmail);
 
             if (userEmail == null || userEmail.equals("anonymousUser")) {
                 return ResponseEntity.status(401).body("Não autenticado");
@@ -45,7 +43,7 @@ public class AppointmentController {
             return ResponseEntity.ok(toResponse(appointment));
         } catch (Exception e) {
             log.error("Erro ao criar agendamento: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage() + " | Causa: " + (e.getCause() != null ? e.getCause().getMessage() : "null"));
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
 
