@@ -1,5 +1,6 @@
 package com.beautyhub.service;
 
+import com.beautyhub.dto.AppointmentResponse;
 import com.beautyhub.entity.Appointment;
 import com.beautyhub.entity.BeautyService;
 import com.beautyhub.entity.User;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentService {
@@ -31,27 +33,28 @@ public class AppointmentService {
     }
 
     public Appointment createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
-        log.info("Buscando usuario: {}", userEmail);
+        log.info("Criando agendamento para: {}", userEmail);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-        log.info("Buscando servico: {}", serviceId);
         BeautyService service = beautyServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
-
-        log.info("Parseando data: {}", dataHoraInicioStr);
         LocalDateTime dataHora = LocalDateTime.parse(dataHoraInicioStr);
-
-        log.info("Salvando agendamento...");
         Appointment appointment = new Appointment(user, service, dataHora);
-        Appointment saved = appointmentRepository.save(appointment);
-        log.info("Agendamento salvo com id: {}", saved.getId());
-        return saved;
+        return appointmentRepository.save(appointment);
     }
 
-    public List<Appointment> getAppointmentsByUser(String userEmail) {
+    public List<AppointmentResponse> getAppointmentsByUser(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        return appointmentRepository.findByClient(user);
+        return appointmentRepository.findByClient(user)
+                .stream()
+                .map(a -> new AppointmentResponse(
+                        a.getId(),
+                        a.getStatus().name(),
+                        a.getDataHoraInicio().toString(),
+                        a.getService().getNome(),
+                        a.getService().getPreco().doubleValue()
+                ))
+                .collect(Collectors.toList());
     }
 }

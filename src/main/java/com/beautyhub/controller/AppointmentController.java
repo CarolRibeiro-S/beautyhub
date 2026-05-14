@@ -12,7 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/appointments")
@@ -38,7 +37,13 @@ public class AppointmentController {
                     request.getServiceId(),
                     request.getDataHoraInicio()
             );
-            return ResponseEntity.ok(toDto(appointment));
+            return ResponseEntity.ok(new AppointmentResponse(
+                    appointment.getId(),
+                    appointment.getStatus().name(),
+                    appointment.getDataHoraInicio().toString(),
+                    appointment.getService().getNome(),
+                    appointment.getService().getPreco().doubleValue()
+            ));
         } catch (Exception e) {
             log.error("Erro ao criar agendamento: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
@@ -53,26 +58,11 @@ public class AppointmentController {
             if (userEmail == null || userEmail.equals("anonymousUser")) {
                 return ResponseEntity.status(401).body("Não autenticado");
             }
-            List<AppointmentResponse> dtos = appointmentService
-                    .getAppointmentsByUser(userEmail)
-                    .stream()
-                    .map(this::toDto)
-                    .collect(Collectors.toList());
+            List<AppointmentResponse> dtos = appointmentService.getAppointmentsByUser(userEmail);
             return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             log.error("Erro ao buscar agendamentos: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
-
-    private AppointmentResponse toDto(Appointment a) {
-        return new AppointmentResponse(
-                a.getId(),
-                a.getStatus().name(),
-                a.getDataHoraInicio().toString(),
-                a.getService().getNome(),
-                a.getService().getPreco().doubleValue()
-        );
-    }
 }
-
