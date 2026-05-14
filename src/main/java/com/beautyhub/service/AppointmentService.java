@@ -7,8 +7,6 @@ import com.beautyhub.entity.User;
 import com.beautyhub.repository.AppointmentRepository;
 import com.beautyhub.repository.BeautyServiceRepository;
 import com.beautyhub.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,8 +15,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class AppointmentService {
-
-    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentRepository appointmentRepository;
     private final BeautyServiceRepository beautyServiceRepository;
@@ -33,7 +29,6 @@ public class AppointmentService {
     }
 
     public AppointmentResponse createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
-        log.info("Criando agendamento para: {}", userEmail);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         BeautyService service = beautyServiceRepository.findById(serviceId)
