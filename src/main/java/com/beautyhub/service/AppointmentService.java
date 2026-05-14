@@ -2,7 +2,6 @@ package com.beautyhub.service;
 
 import com.beautyhub.dto.AppointmentResponse;
 import com.beautyhub.entity.Appointment;
-import com.beautyhub.entity.AppointmentStatus;
 import com.beautyhub.entity.BeautyService;
 import com.beautyhub.entity.User;
 import com.beautyhub.repository.AppointmentRepository;
@@ -72,7 +71,7 @@ public class AppointmentService {
         if (!appointment.getClient().getEmail().equals(userEmail)) {
             throw new RuntimeException("Sem permissão para cancelar este agendamento");
         }
-        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointment.setStatus(Appointment.Status.CANCELLED);
         appointmentRepository.save(appointment);
     }
 }
