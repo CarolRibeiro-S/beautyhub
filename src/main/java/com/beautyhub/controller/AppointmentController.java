@@ -2,7 +2,6 @@ package com.beautyhub.controller;
 
 import com.beautyhub.dto.AppointmentRequest;
 import com.beautyhub.dto.AppointmentResponse;
-import com.beautyhub.entity.Appointment;
 import com.beautyhub.service.AppointmentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,18 +31,12 @@ public class AppointmentController {
             if (userEmail == null || userEmail.equals("anonymousUser")) {
                 return ResponseEntity.status(401).body("Não autenticado");
             }
-            Appointment appointment = appointmentService.createAppointment(
+            AppointmentResponse response = appointmentService.createAppointment(
                     userEmail,
                     request.getServiceId(),
                     request.getDataHoraInicio()
             );
-            return ResponseEntity.ok(new AppointmentResponse(
-                    appointment.getId(),
-                    appointment.getStatus().name(),
-                    appointment.getDataHoraInicio().toString(),
-                    appointment.getService().getNome(),
-                    appointment.getService().getPreco().doubleValue()
-            ));
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Erro ao criar agendamento: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());

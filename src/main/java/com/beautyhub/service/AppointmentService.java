@@ -32,7 +32,7 @@ public class AppointmentService {
         this.userRepository = userRepository;
     }
 
-    public Appointment createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
+    public AppointmentResponse createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
         log.info("Criando agendamento para: {}", userEmail);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -40,7 +40,14 @@ public class AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
         LocalDateTime dataHora = LocalDateTime.parse(dataHoraInicioStr);
         Appointment appointment = new Appointment(user, service, dataHora);
-        return appointmentRepository.save(appointment);
+        Appointment saved = appointmentRepository.save(appointment);
+        return new AppointmentResponse(
+                saved.getId(),
+                saved.getStatus().name(),
+                saved.getDataHoraInicio().toString(),
+                service.getNome(),
+                service.getPreco().doubleValue()
+        );
     }
 
     public List<AppointmentResponse> getAppointmentsByUser(String userEmail) {
