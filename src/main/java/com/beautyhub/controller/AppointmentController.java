@@ -30,17 +30,15 @@ public class AppointmentController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth != null ? auth.getName() : null;
-
             if (userEmail == null || userEmail.equals("anonymousUser")) {
                 return ResponseEntity.status(401).body("Não autenticado");
             }
-
             Appointment appointment = appointmentService.createAppointment(
                     userEmail,
                     request.getServiceId(),
                     request.getDataHoraInicio()
             );
-            return ResponseEntity.ok(toResponse(appointment));
+            return ResponseEntity.ok(toDto(appointment));
         } catch (Exception e) {
             log.error("Erro ao criar agendamento: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
@@ -52,24 +50,22 @@ public class AppointmentController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String userEmail = auth != null ? auth.getName() : null;
-
             if (userEmail == null || userEmail.equals("anonymousUser")) {
                 return ResponseEntity.status(401).body("Não autenticado");
             }
-
-            List<AppointmentResponse> appointments = appointmentService
+            List<AppointmentResponse> dtos = appointmentService
                     .getAppointmentsByUser(userEmail)
                     .stream()
-                    .map(this::toResponse)
+                    .map(this::toDto)
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(appointments);
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             log.error("Erro ao buscar agendamentos: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
 
-    private AppointmentResponse toResponse(Appointment a) {
+    private AppointmentResponse toDto(Appointment a) {
         return new AppointmentResponse(
                 a.getId(),
                 a.getStatus().name(),
