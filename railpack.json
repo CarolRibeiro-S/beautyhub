@@ -1,0 +1,6 @@
+{
+  "builder": "railpack",
+  "build": {
+    "cmd": "./mvnw clean -B -DskipTests package"
+  }
+}
