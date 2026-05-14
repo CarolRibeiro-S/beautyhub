@@ -30,9 +30,12 @@ public class AppointmentController {
     public ResponseEntity<?> createAppointment(@RequestBody AppointmentRequest request) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String userEmail = auth.getName();
-            log.info("Criando agendamento para: {}", userEmail);
-            log.info("ServiceId: {}, Data: {}", request.getServiceId(), request.getDataHoraInicio());
+            String userEmail = auth != null ? auth.getName() : null;
+            log.info("Usuario autenticado: {}", userEmail);
+
+            if (userEmail == null || userEmail.equals("anonymousUser")) {
+                return ResponseEntity.status(401).body("Não autenticado");
+            }
 
             Appointment appointment = appointmentService.createAppointment(
                     userEmail,
@@ -50,7 +53,12 @@ public class AppointmentController {
     public ResponseEntity<?> getMyAppointments() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String userEmail = auth.getName();
+            String userEmail = auth != null ? auth.getName() : null;
+
+            if (userEmail == null || userEmail.equals("anonymousUser")) {
+                return ResponseEntity.status(401).body("Não autenticado");
+            }
+
             List<AppointmentResponse> appointments = appointmentService
                     .getAppointmentsByUser(userEmail)
                     .stream()
