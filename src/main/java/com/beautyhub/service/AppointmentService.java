@@ -2,6 +2,7 @@ package com.beautyhub.service;
 
 import com.beautyhub.dto.AppointmentResponse;
 import com.beautyhub.entity.Appointment;
+import com.beautyhub.entity.AppointmentStatus;
 import com.beautyhub.entity.BeautyService;
 import com.beautyhub.entity.User;
 import com.beautyhub.repository.AppointmentRepository;
@@ -63,5 +64,15 @@ public class AppointmentService {
                         a.getService().getPreco().doubleValue()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public void cancelAppointment(Long appointmentId, String userEmail) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
+        if (!appointment.getClient().getEmail().equals(userEmail)) {
+            throw new RuntimeException("Sem permissão para cancelar este agendamento");
+        }
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointmentRepository.save(appointment);
     }
 }

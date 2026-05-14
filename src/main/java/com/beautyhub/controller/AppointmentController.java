@@ -58,4 +58,20 @@ public class AppointmentController {
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelAppointment(@PathVariable Long id) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth != null ? auth.getName() : null;
+            if (userEmail == null || userEmail.equals("anonymousUser")) {
+                return ResponseEntity.status(401).body("Não autenticado");
+            }
+            appointmentService.cancelAppointment(id, userEmail);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Erro ao cancelar agendamento: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
+        }
+    }
 }
