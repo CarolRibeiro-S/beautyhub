@@ -7,6 +7,8 @@ import com.beautyhub.entity.User;
 import com.beautyhub.repository.AppointmentRepository;
 import com.beautyhub.repository.BeautyServiceRepository;
 import com.beautyhub.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AppointmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
     private final AppointmentRepository appointmentRepository;
     private final BeautyServiceRepository beautyServiceRepository;
@@ -61,12 +65,16 @@ public class AppointmentService {
     }
 
     public void cancelAppointment(Long appointmentId, String userEmail) {
+        log.info("Cancelando agendamento {} para {}", appointmentId, userEmail);
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado: " + appointmentId));
+        log.info("Agendamento encontrado: {}", appointment.getId());
+        log.info("Cliente do agendamento: {}", appointment.getClient().getEmail());
         if (!appointment.getClient().getEmail().equals(userEmail)) {
             throw new RuntimeException("Sem permissão para cancelar este agendamento");
         }
         appointment.setStatus(Appointment.Status.CANCELLED);
         appointmentRepository.save(appointment);
+        log.info("Agendamento {} cancelado com sucesso", appointmentId);
     }
 }
