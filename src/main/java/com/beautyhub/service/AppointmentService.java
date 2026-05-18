@@ -4,7 +4,7 @@ import com.beautyhub.dto.AppointmentResponse;
 import com.beautyhub.entity.Appointment;
 import com.beautyhub.entity.BeautyService;
 import com.beautyhub.entity.User;
-import com.beautyhub.repository.AppointmentRepository;
+import com.beautyhub.repository.AppointmentService;
 import com.beautyhub.repository.BeautyServiceRepository;
 import com.beautyhub.repository.UserRepository;
 import org.slf4j.Logger;
@@ -20,11 +20,11 @@ public class AppointmentService {
 
     private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
-    private final AppointmentRepository appointmentRepository;
+    private final AppointmentService appointmentRepository;
     private final BeautyServiceRepository beautyServiceRepository;
     private final UserRepository userRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository,
+    public AppointmentService(AppointmentService appointmentRepository,
                               BeautyServiceRepository beautyServiceRepository,
                               UserRepository userRepository) {
         this.appointmentRepository = appointmentRepository;
@@ -37,8 +37,22 @@ public class AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         BeautyService service = beautyServiceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
-        LocalDateTime dataHora = LocalDateTime.parse(dataHoraInicioStr);
-        Appointment appointment = new Appointment(user, service, dataHora);
+
+        LocalDateTime dataHoraInicio = LocalDateTime.parse(dataHoraInicioStr);
+        LocalDateTime dataHoraFim = dataHoraInicio.plusMinutes(service.getDuracaoMinutos());
+
+        // Verifica conflito de horário no mesmo serviço
+        List<Appointment> conflitos = appointmentRepository
+                .findByServiceAndDataHoraInicioBetween(service, dataHoraInicio.minusMinutes(service.getDuracaoMinutos() - 1), dataHoraFim);
+
+        boolean temConflito = conflitos.stream()
+                .anyMatch(a -> a.getStatus() != Appointment.Status.CANCELLED);
+
+        if (temConflito) {
+            throw new RuntimeException("Horário já ocupado! Escolha outro horário para este serviço.");
+        }
+
+        Appointment appointment = new Appointment(user, service, dataHoraInicio);
         Appointment saved = appointmentRepository.save(appointment);
         return new AppointmentResponse(
                 saved.getId(),

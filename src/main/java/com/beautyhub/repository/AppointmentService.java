@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
+public interface AppointmentService extends JpaRepository<Appointment, Long> {
     List<Appointment> findByClient(User client);
     List<Appointment> findByServiceAndDataHoraInicioBetween(BeautyService service, LocalDateTime start, LocalDateTime end);
 }
