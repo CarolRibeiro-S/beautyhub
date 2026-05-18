@@ -31,4 +31,6 @@ public class AppointmentResponse {
     public String getServiceoNome() { return servicoNome; }
     public Double getServiceoPreco() { return servicoPreco; }
     public Long getServiceId() { return serviceId; }
+    public String getServicoNome() { return servicoNome; }
+    public Double getServicoPreco() { return servicoPreco; }
 }
