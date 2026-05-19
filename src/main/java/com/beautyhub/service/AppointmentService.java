@@ -4,13 +4,14 @@ import com.beautyhub.dto.AppointmentResponse;
 import com.beautyhub.entity.Appointment;
 import com.beautyhub.entity.BeautyService;
 import com.beautyhub.entity.User;
-import com.beautyhub.repository.AppointmentService;
+import com.beautyhub.repository.AppointmentRepository;
 import com.beautyhub.repository.BeautyServiceRepository;
 import com.beautyhub.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,11 +21,11 @@ public class AppointmentService {
 
     private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
 
-    private final AppointmentService appointmentRepository;
+    private final AppointmentRepository appointmentRepository;
     private final BeautyServiceRepository beautyServiceRepository;
     private final UserRepository userRepository;
 
-    public AppointmentService(AppointmentService appointmentRepository,
+    public AppointmentService(AppointmentRepository appointmentRepository,
                               BeautyServiceRepository beautyServiceRepository,
                               UserRepository userRepository) {
         this.appointmentRepository = appointmentRepository;
@@ -43,7 +44,11 @@ public class AppointmentService {
 
         // Verifica conflito de horário no mesmo serviço
         List<Appointment> conflitos = appointmentRepository
-                .findByServiceAndDataHoraInicioBetween(service, dataHoraInicio.minusMinutes(service.getDuracaoMinutos() - 1), dataHoraFim);
+                .findByServiceAndDataHoraInicioBetween(
+                        service,
+                        dataHoraInicio.minusMinutes(service.getDuracaoMinutos() - 1),
+                        dataHoraFim
+                );
 
         boolean temConflito = conflitos.stream()
                 .anyMatch(a -> a.getStatus() != Appointment.Status.CANCELLED);
@@ -62,6 +67,23 @@ public class AppointmentService {
                 service.getPreco().doubleValue(),
                 service.getId()
         );
+    }
+
+    public List<String> getHorariosOcupados(Long serviceId, String data) {
+        BeautyService service = beautyServiceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+
+        LocalDate localDate = LocalDate.parse(data);
+        LocalDateTime inicioDia = localDate.atStartOfDay();
+        LocalDateTime fimDia = localDate.atTime(23, 59, 59);
+
+        List<Appointment> agendamentos = appointmentRepository
+                .findByServiceAndDataHoraInicioBetween(service, inicioDia, fimDia);
+
+        return agendamentos.stream()
+                .filter(a -> a.getStatus() != Appointment.Status.CANCELLED)
+                .map(a -> a.getDataHoraInicio().toLocalTime().toString().substring(0, 5))
+                .collect(Collectors.toList());
     }
 
     public List<AppointmentResponse> getAppointmentsByUser(String userEmail) {

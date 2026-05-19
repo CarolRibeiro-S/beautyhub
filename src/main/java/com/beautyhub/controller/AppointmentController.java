@@ -39,6 +39,9 @@ public class AppointmentController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Erro ao criar agendamento: {}", e.getMessage(), e);
+            if (e.getMessage() != null && e.getMessage().contains("Horário já ocupado")) {
+                return ResponseEntity.status(409).body(e.getMessage());
+            }
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
@@ -71,6 +74,19 @@ public class AppointmentController {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Erro ao cancelar agendamento: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/ocupados")
+    public ResponseEntity<?> getHorariosOcupados(
+            @RequestParam Long serviceId,
+            @RequestParam String data) {
+        try {
+            List<String> horariosOcupados = appointmentService.getHorariosOcupados(serviceId, data);
+            return ResponseEntity.ok(horariosOcupados);
+        } catch (Exception e) {
+            log.error("Erro ao buscar horários ocupados: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
