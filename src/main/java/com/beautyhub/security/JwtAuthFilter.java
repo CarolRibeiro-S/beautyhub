@@ -27,6 +27,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        // Rotas públicas — ignora token inválido e deixa passar
+        if (path.startsWith("/auth/") ||
+            path.startsWith("/services") ||
+            path.startsWith("/appointments/ocupados")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
