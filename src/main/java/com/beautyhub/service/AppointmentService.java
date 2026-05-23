@@ -1,6 +1,7 @@
 package com.beautyhub.service;
 
 import com.beautyhub.dto.AppointmentResponse;
+import com.beautyhub.dto.DescontoResponse;
 import com.beautyhub.entity.Appointment;
 import com.beautyhub.entity.BeautyService;
 import com.beautyhub.entity.User;
@@ -33,6 +34,40 @@ public class AppointmentService {
         this.userRepository = userRepository;
     }
 
+    public DescontoResponse calcularDesconto(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        long totalAgendamentos = appointmentRepository.findByClient(user)
+                .stream()
+                .filter(a -> a.getStatus() != Appointment.Status.CANCELLED)
+                .count();
+
+        // Próximo agendamento será o totalAgendamentos + 1
+        long proximoNumero = totalAgendamentos + 1;
+
+        double desconto = 0.0;
+        String mensagem = "";
+        boolean gratuito = false;
+
+        if (proximoNumero == 1) {
+            desconto = 30.0;
+            mensagem = "🎉 1° agendamento — 30% de desconto!";
+        } else if (proximoNumero == 3) {
+            desconto = 35.0;
+            mensagem = "🎉 3° agendamento — 35% de desconto!";
+        } else if (proximoNumero == 5) {
+            desconto = 40.0;
+            mensagem = "🎉 5° agendamento — 40% de desconto!";
+        } else if (proximoNumero == 10) {
+            desconto = 100.0;
+            mensagem = "🎉 10° agendamento — Serviço GRATUITO!";
+            gratuito = true;
+        }
+
+        return new DescontoResponse(desconto, mensagem, gratuito, (int) proximoNumero);
+    }
+
     public AppointmentResponse createAppointment(String userEmail, Long serviceId, String dataHoraInicioStr) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -42,7 +77,6 @@ public class AppointmentService {
         LocalDateTime dataHoraInicio = LocalDateTime.parse(dataHoraInicioStr);
         LocalDateTime dataHoraFim = dataHoraInicio.plusMinutes(service.getDuracaoMinutos());
 
-        // Verifica conflito de horário no mesmo serviço
         List<Appointment> conflitos = appointmentRepository
                 .findByServiceAndDataHoraInicioBetween(
                         service,
@@ -106,8 +140,6 @@ public class AppointmentService {
         log.info("Cancelando agendamento {} para {}", appointmentId, userEmail);
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Agendamento não encontrado: " + appointmentId));
-        log.info("Agendamento encontrado: {}", appointment.getId());
-        log.info("Cliente do agendamento: {}", appointment.getClient().getEmail());
         if (!appointment.getClient().getEmail().equals(userEmail)) {
             throw new RuntimeException("Sem permissão para cancelar este agendamento");
         }

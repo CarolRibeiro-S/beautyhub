@@ -1,16 +1,24 @@
 package com.beautyhub.controller;
 
-import com.beautyhub.dto.AppointmentRequest;
-import com.beautyhub.dto.AppointmentResponse;
-import com.beautyhub.service.AppointmentService;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.beautyhub.dto.AppointmentRequest;
+import com.beautyhub.dto.AppointmentResponse;
+import com.beautyhub.dto.DescontoResponse;
+import com.beautyhub.service.AppointmentService;
 
 @RestController
 @RequestMapping("/appointments")
@@ -87,6 +95,22 @@ public class AppointmentController {
             return ResponseEntity.ok(horariosOcupados);
         } catch (Exception e) {
             log.error("Erro ao buscar horários ocupados: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/desconto")
+    public ResponseEntity<?> getDesconto() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = auth != null ? auth.getName() : null;
+            if (userEmail == null || userEmail.equals("anonymousUser")) {
+                return ResponseEntity.status(401).body("Não autenticado");
+            }
+            DescontoResponse desconto = appointmentService.calcularDesconto(userEmail);
+            return ResponseEntity.ok(desconto);
+        } catch (Exception e) {
+            log.error("Erro ao calcular desconto: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
